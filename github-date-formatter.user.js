@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub 日期格式美化（多格式title自动识别版）
 // @namespace    http://tampermonkey.net/
-// @version      1.12
+// @version      1.13
 // @description  将 GitHub 页面中的日期统一显示为 YYYY/MM/DD HH:mm:ss（本地时区）
 // @match        https://github.com/*
 // @downloadURL  https://raw.githubusercontent.com/nonkr/tampermonkey_scripts/master/github-date-formatter.user.js
@@ -49,6 +49,7 @@
         }
 
         table[aria-labelledby="folders-and-files"] .react-directory-commit-message {
+            contain: inline-size !important;
             min-width: 0 !important;
             max-width: 100% !important;
             overflow: hidden !important;
