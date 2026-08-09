@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub 日期格式美化（多格式title自动识别版）
 // @namespace    http://tampermonkey.net/
-// @version      1.10
+// @version      1.11
 // @description  将 GitHub 页面中的日期统一显示为 YYYY/MM/DD HH:mm:ss（本地时区）
 // @match        https://github.com/*
 // @downloadURL  https://raw.githubusercontent.com/nonkr/tampermonkey_scripts/master/github-date-formatter.user.js
@@ -21,6 +21,11 @@
     ].join(',');
 
     const shadowObservers = new WeakMap();
+
+    const monthNumbers = {
+        Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06',
+        Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'
+    };
 
     GM_addStyle(`
         relative-time[datetime],
@@ -47,6 +52,21 @@
             width: 184px !important;
             min-width: 184px !important;
             max-width: 184px !important;
+        }
+
+        table[aria-labelledby="folders-and-files"] tbody tr.react-directory-row > td.eg-download {
+            width: 96px !important;
+            min-width: 96px !important;
+            max-width: 96px !important;
+            white-space: nowrap !important;
+        }
+
+        table[aria-labelledby="folders-and-files"] td.eg-download > * {
+            display: inline-flex !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            gap: 4px !important;
+            white-space: nowrap !important;
         }
     `);
 
@@ -99,8 +119,21 @@
         }
     }
 
+    function updateCommitGroupTitles() {
+        document.querySelectorAll('[data-testid="commit-group-title"]').forEach(el => {
+            const text = el.textContent.trim();
+            const match = text.match(/^Commits on ([A-Z][a-z]{2}) (\d{1,2}), (\d{4})$/);
+            if (!match) return;
+
+            const [, month, day, year] = match;
+            const title = `Commits on ${year}/${monthNumbers[month]}/${pad(day)}`;
+            el.textContent = title;
+        });
+    }
+
     function updateAllTimes() {
         document.querySelectorAll(timeSelector).forEach(updateTimeElement);
+        updateCommitGroupTitles();
     }
 
     let updateScheduled = false;
