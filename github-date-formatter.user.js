@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         GitHub 日期格式美化（多格式title自动识别版）
 // @namespace    http://tampermonkey.net/
-// @version      1.9
+// @version      1.10
 // @description  将 GitHub 页面中的日期统一显示为 YYYY/MM/DD HH:mm:ss（本地时区）
 // @match        https://github.com/*
 // @downloadURL  https://raw.githubusercontent.com/nonkr/tampermonkey_scripts/master/github-date-formatter.user.js
 // @updateURL    https://raw.githubusercontent.com/nonkr/tampermonkey_scripts/master/github-date-formatter.user.js
-// @grant        none
+// @grant        GM_addStyle
 // ==/UserScript==
 
 (function() {
@@ -22,8 +22,7 @@
 
     const shadowObservers = new WeakMap();
 
-    const style = document.createElement('style');
-    style.textContent = `
+    GM_addStyle(`
         relative-time[datetime],
         local-time[datetime],
         time-ago[datetime],
@@ -32,19 +31,24 @@
             white-space: nowrap !important;
         }
 
+        table[aria-labelledby="folders-and-files"] {
+            table-layout: auto !important;
+        }
+
         .react-directory-commit-age {
+            width: 168px !important;
             min-width: 168px !important;
+            max-width: none !important;
             overflow: visible !important;
             white-space: nowrap !important;
         }
 
-        table:has(.react-directory-commit-age) thead th:last-child,
-        table:has(.react-directory-commit-age) tbody tr.react-directory-row > td:last-child {
+        table[aria-labelledby="folders-and-files"] tbody tr.react-directory-row > td:last-child {
             width: 184px !important;
             min-width: 184px !important;
+            max-width: 184px !important;
         }
-    `;
-    document.head.appendChild(style);
+    `);
 
     function pad(value) {
         return String(value).padStart(2, '0');
