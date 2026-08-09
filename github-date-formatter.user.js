@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub 日期格式美化（多格式title自动识别版）
 // @namespace    http://tampermonkey.net/
-// @version      1.7
+// @version      1.8
 // @description  将 GitHub 页面中的日期统一显示为 YYYY/MM/DD HH:mm:ss（本地时区）
 // @match        https://github.com/*
 // @downloadURL  https://raw.githubusercontent.com/nonkr/tampermonkey_scripts/master/github-date-formatter.user.js
@@ -21,6 +21,26 @@
     ].join(',');
 
     const shadowObservers = new WeakMap();
+
+    const style = document.createElement('style');
+    style.textContent = `
+        .tm-github-formatted-time {
+            white-space: nowrap !important;
+        }
+
+        .tm-github-formatted-time-container {
+            min-width: 168px !important;
+            overflow: visible !important;
+            white-space: nowrap !important;
+        }
+
+        .tm-github-formatted-time-cell,
+        .tm-github-formatted-time-header {
+            width: 184px !important;
+            min-width: 184px !important;
+        }
+    `;
+    document.head.appendChild(style);
 
     function pad(value) {
         return String(value).padStart(2, '0');
@@ -55,6 +75,23 @@
         shadowObservers.set(el.shadowRoot, observer);
     }
 
+    function updateTimeLayout(el) {
+        el.classList.add('tm-github-formatted-time');
+
+        const container = el.closest('.react-directory-commit-age');
+        if (!container) return;
+
+        container.classList.add('tm-github-formatted-time-container');
+
+        const cell = container.closest('td');
+        if (!cell) return;
+
+        cell.classList.add('tm-github-formatted-time-cell');
+
+        const header = cell.closest('table')?.querySelector('thead th:last-child');
+        header?.classList.add('tm-github-formatted-time-header');
+    }
+
     function updateTimeElement(el) {
         // datetime 是稳定的 ISO 8601 值；title 会随语言和 12/24 小时制变化。
         const source = el.getAttribute('datetime') || el.getAttribute('title');
@@ -63,6 +100,7 @@
         const formatted = formatDate(source);
         if (!formatted) return;
 
+        updateTimeLayout(el);
         observeShadowRoot(el);
 
         const displayNode = getDisplayNode(el);
